@@ -1,0 +1,6 @@
+
+# Build directory
+/out/
+
+# Libraries included by maven
+/libs/
