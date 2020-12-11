@@ -5,8 +5,8 @@ import CharGrid
 import kotlin.math.max
 import kotlin.math.min
 
-typealias YXPair = Pair<Int, Int>
-typealias NGrid = Array<Array<MutableList<YXPair>>> // Each Grid Cell has a list of neighbor coordinates (y, x)
+private typealias YXPair = Pair<Int, Int>
+private typealias NGrid = Array<Array<MutableList<YXPair>>> // Each Grid Cell has a list of neighbor coordinates (y, x)
 
 class Day11 : AbstractDay() {
 
