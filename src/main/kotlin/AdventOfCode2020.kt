@@ -14,7 +14,7 @@ val ALL_DAYS: Array<AbstractDay> = arrayOf(
     Day10(),
     Day11(),
     Day12(),
-//    Day13(),
+    Day13(),
 //    Day14(),
 //    Day15(),
 //    Day16(),
