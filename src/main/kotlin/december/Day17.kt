@@ -14,11 +14,11 @@ class Day17 : AbstractDay() {
     // Part 2: 1520
     override fun part2(): String = simulate(6, false).toString()
 
-
     private fun simulate(cycles: Int, excludeW: Boolean = true): Int {
 
         val cubes = mutableSetOf<Cube>()
-        var world = mutableMapOf<Int, MutableMap<Int, MutableMap<Int, MutableMap<Int, Cube>>>>()
+        val unstable = mutableSetOf<Cube>()
+        val world = mutableMapOf<Int, MutableMap<Int, MutableMap<Int, MutableMap<Int, Cube>>>>()
 
         input.indices.forEach { y ->
             input[y].indices.forEach { x ->
@@ -31,55 +31,20 @@ class Day17 : AbstractDay() {
         }
 
         for (c in 1..cycles) {
-            val unstable = mutableSetOf<Cube>()
-            for (cube in cubes) {
-                unstable.addAll(cube.neighbors(world, excludeW))
-            }
-            unstable.addAll(cubes.filter { it.state != CubeState.STABLE })
-//            printGrid(unstable.filter { it.state != CubeState.EMPTY }.toSet())
+            cubes.forEach { it.neighbors(world, excludeW, unstable) }
             for (cube in unstable) {
                 when (cube.state) {
-                    CubeState.NEW -> {
-                        cube.state = CubeState.STABLE
-                        cubes.add(cube)
-                    }
-                    CubeState.FADING, CubeState.EMPTY -> {
-//                        cube.deregister(world)
-                        cubes.remove(cube)
-                    }
+                    CubeState.NEW -> cubes.add(cube.also { it.state = CubeState.STABLE })
+                    CubeState.FADING -> cubes.remove(cube)
                     else -> error("Invalid state.")
                 }
             }
-//            printGrid(cubes)
-            world = mutableMapOf()
+            world.clear()
+            unstable.clear()
             cubes.forEach { it.register(world) }
         }
         return cubes.size
     }
-
-//    private fun printGrid(cubes: Set<Cube>) {
-//        val maxX = cubes.maxByOrNull { it.x }?.x!!
-//        val minX = cubes.minByOrNull { it.x }?.x!!
-//        val maxY = cubes.maxByOrNull { it.y }?.y!!
-//        val minY = cubes.minByOrNull { it.y }?.y!!
-//        val maxZ = cubes.maxByOrNull { it.z }?.z!!
-//        val minZ = cubes.minByOrNull { it.z }?.z!!
-//        val maxW = cubes.maxByOrNull { it.w }?.w!!
-//        val minW = cubes.minByOrNull { it.w }?.w!!
-//        println("min($minX, $minY, $minZ, $minW)")
-//        for (w in minW..maxW) {
-//            for (z in minZ..maxZ) {
-//                println("z=$z, w=$w")
-//                for (y in minY..maxY) {
-//                    for (x in minX..maxX) {
-//                        val cube = cubes.find { it.x == x && it.y == y && it.z == z && it.w == w }
-//                        print(if (cube == null || cube.state == CubeState.EMPTY) '.' else if (cube.state == CubeState.FADING) 'O' else if (cube.state == CubeState.NEW) 'X' else '#')
-//                    }
-//                    println()
-//                }
-//            }
-//        }
-//    }
 
     enum class CubeState {
         NEW, // Created in this cycle
@@ -97,8 +62,7 @@ class Day17 : AbstractDay() {
             wMap[w] = this
         }
 
-        fun neighbors(world: Grid4D,  excludeW: Boolean = true, stub: Boolean = false): Set<Cube> {
-            val unstable = mutableSetOf<Cube>()
+        fun neighbors(world: Grid4D, excludeW: Boolean = true, unstable: MutableSet<Cube>, stub: Boolean = false) {
             var count = 0
             for (xx in (x - 1)..(x + 1)) {
                 for (yy in (y - 1)..(y + 1)) {
@@ -108,15 +72,10 @@ class Day17 : AbstractDay() {
                             if (xx == x && yy == y && zz == z && ww == w) continue
                             val neighbor = world[xx]?.get(yy)?.get(zz)?.get(ww)
                             if (neighbor != null && neighbor.state != CubeState.EMPTY) {
-                                when (neighbor.state) {
-                                    CubeState.STABLE, CubeState.FADING -> count++
-                                    else -> {
-                                    }
-                                }
+                                if (neighbor.state == CubeState.STABLE || neighbor.state == CubeState.FADING) count++
                             } else {
                                 val cube = neighbor ?: Cube(xx, yy, zz, ww, CubeState.EMPTY).also { it.register(world) }
-                                unstable.add(cube)
-                                if (!stub) unstable.addAll(cube.neighbors(world, excludeW, true))
+                                if (!stub) cube.neighbors(world, excludeW, unstable, true)
                             }
                         }
                     }
@@ -126,28 +85,6 @@ class Day17 : AbstractDay() {
             if (state == CubeState.STABLE && count !in 2..3) state = CubeState.FADING
             else if (state == CubeState.EMPTY && count == 3) state = CubeState.NEW
             if (state == CubeState.FADING || state == CubeState.NEW) unstable.add(this)
-            return unstable
         }
-
-//        fun deregister(world: Grid4D) {
-//            val yMap = world[x]
-//            val zMap = world[y]
-//            val wMap = world[z]
-//            wMap?.remove(w)
-//            if (wMap.isNullOrEmpty()) {
-//                zMap?.remove(z)
-//                if (zMap.isNullOrEmpty()) {
-//                    yMap?.remove(y)
-//                    if (yMap.isNullOrEmpty()) {
-//                        world.remove(x)
-//                    }
-//                }
-//            }
-//        }
-
-//        override fun toString(): String {
-//            return "Cube($x, $y, $z: $state)"
-//        }
     }
-
 }
